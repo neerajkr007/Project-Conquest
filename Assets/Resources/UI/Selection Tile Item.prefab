@@ -104,3 +104,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b8c8b0076054232838a1d3f5f9bbebb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tileImage: {fileID: 6408612488281005939}

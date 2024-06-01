@@ -31,6 +31,21 @@ namespace Game.Core.Utils.BehaviourTrees
         }
     }
 
+    public class FuncStrategyWithNodeStatus : IStrategy
+    {
+        private readonly Func<Node.Status> doSomething;
+
+        public FuncStrategyWithNodeStatus(Func<Node.Status> doSomething)
+        {
+            this.doSomething = doSomething;
+        }
+
+        public Node.Status Process()
+        {
+            return doSomething.Invoke();
+        }
+    }
+
     public class Condition : IStrategy
     {
         private readonly Func<bool> predicate;
@@ -95,9 +110,10 @@ namespace Game.Core.Utils.BehaviourTrees
         private readonly Transform entity;
         private Transform target;
         private bool isPathCalculated;
+        private float minDistToStop;
         private bool forceStopMovement;
 
-        public MoveToTarget(Transform entity, NavMeshAgent agent, Transform target)
+        public MoveToTarget(Transform entity, NavMeshAgent agent, Transform target, float minDistToStop)
         {
             this.entity = entity;
             this.agent = agent;
@@ -108,6 +124,11 @@ namespace Game.Core.Utils.BehaviourTrees
         public void SetTargetDynamic(Transform target)
         {
             this.target = target;
+        }
+
+        public void SetMinDistanceToStop(float minDistToStop)
+        {
+            this.minDistToStop = minDistToStop;
         }
 
         public void SetForceStopMovement(bool forceStopMovement)
@@ -121,15 +142,18 @@ namespace Game.Core.Utils.BehaviourTrees
                 return Node.Status.Failure;
             
             var dist = Vector3.Distance(entity.position, target.position);
-            if (dist < 2.6f || forceStopMovement)
+            if (forceStopMovement || dist < minDistToStop)
             {
                 agent.isStopped = true;
                 return Node.Status.Success;
             }
 
             agent.isStopped = false;
+            
+            if (BattleManager.Instance.BattleState == BattleState.Paused)
+                agent.SetDestination(entity.position);
+            
             agent.SetDestination(target.position);
-            entity.LookAt(new Vector3(target.position.x, entity.position.y, target.position.z));
 
             if (agent.pathPending) 
                 isPathCalculated = true;
